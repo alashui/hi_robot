@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<launch>
+  <param name="/use_sim_time" value="false" />
+  <arg name="model" default="$(find myrobot_urdf)/urdf/robot1.xacro"/>
+  <param name="robot_description" command="$(find xacro)/xacro.py $(arg model)" />
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" > </node>
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" >
+    <param name="publish_frequency" type="double" value="50.0" />
+  </node>
+ 
+
+<arg name="3d_sensor" default="$(env TURTLEBOT_3D_SENSOR)"/>  <!--r200, kinect, asus_xtion_pro -->
+  <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">  
+    <arg name="rgb_processing" value="false" />  
+    <arg name="depth_registration" value="false" />  
+    <arg name="depth_processing" value="false" />  
+      
+    <!--We must specify an absolute topic name because if not it will be prefixed by "$(arg camera)".  
+         Probably is a bug in the nodelet manager: https://github.com/ros/nodelet_core/issues/7 -->   
+  </include>  
+
+
+
+
+ <node pkg="tf" type="static_transform_publisher" name="base2laser" args="0 0 0 0 0 0 base_link camera_depth_frame 100"/>
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <param name="controller_frequency" value="10.0"/>
+    <param name="controller_patiente" value="15.0"/>
+    <rosparam file="$(find base_controller)/launch/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find base_controller)/launch/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find base_controller)/launch/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find base_controller)/launch/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find base_controller)/launch/base_local_planner_params.yaml" command="load" />
+  </node>
+
+
+
+<arg name="scan_topic" default="/scan" />
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen" clear_params="true">
+    <param name="odom_frame" value="odom"/>
+    <param name="map_update_interval" value="2.0"/>
+    <!-- Set maxUrange < actual maximum range of the Laser -->
+    <param name="maxRange" value="5.0"/>
+    <param name="maxUrange" value="4.5"/>
+    <param name="sigma" value="0.05"/>
+    <param name="kernelSize" value="1"/>
+    <param name="lstep" value="0.05"/>
+    <param name="astep" value="0.05"/>
+    <param name="iterations" value="5"/>
+    <param name="lsigma" value="0.075"/>
+    <param name="ogain" value="3.0"/>
+    <param name="lskip" value="0"/>
+    <param name="srr" value="0.01"/>
+    <param name="srt" value="0.02"/>
+    <param name="str" value="0.01"/>
+    <param name="stt" value="0.02"/>
+    <param name="linearUpdate" value="0.5"/>
+    <param name="angularUpdate" value="0.5"/>
+    <param name="temporalUpdate" value="-1.0"/>
+    <param name="resampleThreshold" value="0.5"/>
+    <param name="particles" value="80"/>
+    <param name="xmin" value="-1.0"/>
+    <param name="ymin" value="-1.0"/>
+    <param name="xmax" value="1.0"/>
+    <param name="ymax" value="1.0"/>
+    <param name="delta" value="0.05"/>
+    <param name="llsamplerange" value="0.01"/>
+    <param name="llsamplestep" value="0.01"/>
+    <param name="lasamplerange" value="0.005"/>
+    <param name="lasamplestep" value="0.005"/>
+    <remap from="scan" to="$(arg scan_topic)"/>
+  </node>
+
+    <param name="base_link" value="base_footprint"/>
+ 
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find base_controller)/launch/mapping.rviz"/>
+
+
+</launch>
+

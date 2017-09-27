@@ -1,0 +1,9 @@
+
+roslaunch base_controller base_controller.launch 
+rosrun teleop_twist_keyboard teleop_twist_keyboard.py
+
+roslaunch base_controller robot_gmapping.launch 
+
+rosrun map_server map_saver -f ~/hi_robot/src/base_controller/maps/mymap1
+
+ roslaunch base_controller robot_navigation.launch

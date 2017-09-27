@@ -1,0 +1,19 @@
+1.工作机和上网本网络连接：
+首先，连接上同一个局域网，输入ifconfig查看ip地址，然后在～/.bashrc中进行修改
+工作机：export ROS_MASTER_URI=http://IP_OF_TURTLEBOT:11311
+        export ROS_HOSTNAME=IP_OF_WORKSTATION
+上网本：export ROS_MASTER_URI=http://IP_OF_TURTLEBOT:11311
+然后输入：ssh turtlebot@192.168.1.101进行连接
+2.启动turtlebot:上网本连接上turtlebot后，输入：roslaunch turtlebot_bringup minimal.launch
+在工作机上可输入：roslaunch turtlebot_teleop keyboard_teleop.launch（键盘控制）
+(在上网本上打开)roslaunch turtlebot_follower follower.launch（机器人跟随）先开工作机上的kinect:roslaunch openni_launch openni.launch
+				 cd ~/helloworld/turtlebot     	python goforward.py（走直线）
+3.启动循线和采集程序：（1）上网本打开kinect相机：roslaunch turtlebot_bringup 3dsensor.launch
+					 （2）启动程序：rosrun follower follower_mt
+					 （3）拷贝上网本上保存的地图数据到工作机上：scp -r turtlebot@192.168.1.105:~/follower_image ~/
+					 （4）创建三维地图：将保存的数据放入slam文件中进行处理
+4.地图创建与导航：（1）创建地图：上网本上输入：roslaunch turtlebot_navigation gmapping_demo.launch
+		工作机上打开rivz界面：roslaunch turtlebot_rviz_launchers view_navigation.launch
+		打开键盘控制，控制遍历地图，并保存，上网本输入：rosrun map_server map_saver -f /home/turtlebot/map/my_map1
+		（2）导航避障：上网本打开保存的地图：roslaunch turtlebot_navigation amcl_demo.launch map_file:=/home/turtlebot/map/my_map.yaml
+								工作机打开rivz界面：roslaunch turtlebot_rviz_launchers view_navigation.launch
